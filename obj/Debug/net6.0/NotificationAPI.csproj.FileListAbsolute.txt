@@ -50,3 +50,7 @@ C:\Users\SAED\Documents\Dubem-Clohea\NotificationAPI\obj\Debug\net6.0\refint\Not
 C:\Users\SAED\Documents\Dubem-Clohea\NotificationAPI\obj\Debug\net6.0\NotificationAPI.pdb
 C:\Users\SAED\Documents\Dubem-Clohea\NotificationAPI\obj\Debug\net6.0\NotificationAPI.genruntimeconfig.cache
 C:\Users\SAED\Documents\Dubem-Clohea\NotificationAPI\obj\Debug\net6.0\ref\NotificationAPI.dll
+C:\Users\SAED\Documents\Dubem-Clohea\NotificationAPI\bin\Debug\net6.0\Postmark.dll
+C:\Users\SAED\Documents\Dubem-Clohea\NotificationAPI\bin\Debug\net6.0\System.Text.Encodings.Web.dll
+C:\Users\SAED\Documents\Dubem-Clohea\NotificationAPI\bin\Debug\net6.0\System.Text.Json.dll
+C:\Users\SAED\Documents\Dubem-Clohea\NotificationAPI\bin\Debug\net6.0\runtimes\browser\lib\net6.0\System.Text.Encodings.Web.dll

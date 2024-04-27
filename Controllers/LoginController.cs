@@ -5,8 +5,7 @@ using System.Security.Claims;
 using System.Text;
 using NotificationAPI;
 using Microsoft.EntityFrameworkCore;
-using System.Net.Mail;
-using System.Net;
+using PostmarkDotNet;
 
 namespace LoginControllers
 {
@@ -16,11 +15,13 @@ namespace LoginControllers
     {
         private readonly IConfiguration _configuration;
         private readonly UserDBContext _context;
+        private readonly PostmarkClient _postmarkClient;
 
         public AuthController(IConfiguration configuration, UserDBContext context)
         {
             _configuration = configuration;
             _context = context;
+            _postmarkClient = new PostmarkClient("28f12f7b-d840-41b9-8b20-4ab43212155e");
         }
     [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
@@ -81,51 +82,38 @@ namespace LoginControllers
         }
     }
 
-        //[Authorize]
-[HttpPost("send-email")]
-public IActionResult SendEmail([FromBody] EmailRequest request)
-{
-    try
+    [HttpPost("send-email")]
+    public async Task<IActionResult> SendEmail([FromBody] EmailRequest request)
     {
-        // Validate request
-        if (string.IsNullOrEmpty(request.Email) || !IsValidEmail(request.Email))
+        try
         {
-            return BadRequest("Invalid email address");
-        }
-        
-        if (string.IsNullOrEmpty(request.Message))
-        {
-            return BadRequest("Message cannot be empty");
-        }
-        
-        // Retrieve SMTP settings from configuration
-        var smtpSettings = _configuration.GetSection("SmtpSettings").Get<SmtpSettings>();
-
-        // Send email
-        using (var smtpClient = new SmtpClient(smtpSettings.Host, smtpSettings.Port))
-        {
-            smtpClient.Credentials = new NetworkCredential(smtpSettings.Username, smtpSettings.Password);
-            smtpClient.EnableSsl = true; // Enable SSL if required
-
-            var message = new MailMessage
+            if (string.IsNullOrEmpty(request.Email) || !IsValidEmail(request.Email))
             {
-                From = new MailAddress(smtpSettings.Username), // Use your SMTP username as the sender
-                Subject = "Subject of the email",
-                Body = request.Message
-            };
-            
-            message.To.Add(request.Email);
-            
-            smtpClient.Send(message);
-        }
+                return BadRequest("Invalid email address");
+            }
 
-        return Ok("Email sent successfully");
+            if (string.IsNullOrEmpty(request.Message))
+            {
+                return BadRequest("Message cannot be empty");
+            }
+
+            var emailService = new PostmarkEmailService("2a5833b7-c083-49fd-ade6-d348b4f42f99");
+            var isEmailSent = await emailService.SendEmailAsync("dubem.egbo@saed.dev", request.Email, "Dubem's Test Email", request.Message);
+            if (isEmailSent)
+            {
+                return Ok("Email sent successfully");
+            }
+            else
+            {
+                return StatusCode(500, "Failed to send email");
+            }
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Failed to send email: {ex.Message}");
+        }
     }
-    catch (Exception ex)
-    {
-        return StatusCode(500, $"Failed to send email: {ex.Message}");
-    }
-}
+
 
         private bool IsValidEmail(string email)
         {
@@ -139,24 +127,22 @@ public IActionResult SendEmail([FromBody] EmailRequest request)
                 return false;
             }
         }
-
-
         //method checks if username already exists...
         private async Task<bool> UserExists(string username)
         {
             return await _context.RegisterModels.AnyAsync(u => u.Username == username);
         }
 
-        //Method to check if email already exists...
+        //checks if email already exists...
         private async Task<bool> EmailExists(string email)
         {
             return await _context.RegisterModels.AnyAsync(u => u.Email == email);
         }
 
-        // Method to authenticate user....
+        //authenticates the user....
         private async Task<RegisterModel> AuthenticateUser(string username, string password)
         {
-            // Find the user...
+            // Finds the user...
             var user = await _context.RegisterModels.FirstOrDefaultAsync(u => u.Username == username);
             
             // Check if user exists and the password matches

@@ -1,40 +1,33 @@
-﻿using System.Net.Mail;
+﻿using PostmarkDotNet;
 
-namespace NotificationAPI;
-
-public class EmailService : IEmailService
+public class PostmarkEmailService
 {
-    private readonly SmtpClient _smtpClient;
+    private readonly PostmarkClient _client;
 
-    public EmailService(SmtpClient smtpClient)
+    public PostmarkEmailService(string apiKey)
     {
-        _smtpClient = smtpClient;
+        _client = new PostmarkClient(apiKey);
     }
 
-    public async Task SendEmailAsync(string toEmail, string subject, string body)
+    public async Task<bool> SendEmailAsync(string from, string to, string subject, string body)
     {
-        var message = new MailMessage
-        {
-            From = new MailAddress("dubemmegbo@gmmail.com"), 
-            Subject = subject,
-            Body = body,
-            IsBodyHtml = true
-        };
-
-        message.To.Add(toEmail);
-
         try
         {
-            await _smtpClient.SendMailAsync(message);
+            var message = new PostmarkMessage
+            {
+                From = from,
+                To = to,
+                Subject = subject,
+                HtmlBody = body
+            };
+
+            var response = await _client.SendMessageAsync(message);
+            return response.Status == PostmarkStatus.Success;
         }
         catch (Exception ex)
         {
-            // Handle exceptions or log errors
-            throw new Exception("Failed to send email", ex);
-        }
-        finally
-        {
-            message.Dispose();
+            Console.WriteLine($"Failed to send email: {ex.Message}");
+            return false;
         }
     }
 }

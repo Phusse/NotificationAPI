@@ -67,6 +67,10 @@
               "target": "Package",
               "version": "[6.0.1, )"
             },
+            "Postmark": {
+              "target": "Package",
+              "version": "[5.0.0, )"
+            },
             "SendGrid": {
               "target": "Package",
               "version": "[9.29.3, )"
