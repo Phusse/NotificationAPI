@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+// using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -6,6 +6,7 @@ using System.Text;
 using NotificationAPI;
 using Microsoft.EntityFrameworkCore;
 using PostmarkDotNet;
+using Microsoft.AspNetCore.Mvc;
 
 namespace LoginControllers
 {
@@ -83,37 +84,42 @@ namespace LoginControllers
     }
 
     [HttpPost("send-email")]
-    public async Task<IActionResult> SendEmail([FromBody] EmailRequest request)
-    {
-        try
+    //[Authorize] 
+        public async Task<IActionResult> SendEmail([FromBody] EmailRequest request)
         {
-            if (string.IsNullOrEmpty(request.Email) || !IsValidEmail(request.Email))
+            try
             {
-                return BadRequest("Invalid email address");
-            }
+                if (string.IsNullOrEmpty(request.Email) || !IsValidEmail(request.Email))
+                {
+                    return BadRequest("Invalid email address");
+                }
 
-            if (string.IsNullOrEmpty(request.Message))
-            {
-                return BadRequest("Message cannot be empty");
-            }
+                if (string.IsNullOrEmpty(request.Message))
+                {
+                    return BadRequest("Message cannot be empty");
+                }
 
-            var emailService = new PostmarkEmailService("2a5833b7-c083-49fd-ade6-d348b4f42f99");
-            var isEmailSent = await emailService.SendEmailAsync("dubem.egbo@saed.dev", request.Email, "Dubem's Test Email", request.Message);
-            if (isEmailSent)
-            {
-                return Ok("Email sent successfully");
+                var emailService = new PostmarkEmailService("2a5833b7-c083-49fd-ade6-d348b4f42f99");
+                var isEmailSent = await emailService.SendEmailAsync("dubem.egbo@saed.dev", request.Email, "Dubem's Test Email", request.Message);
+                if (isEmailSent)
+                {
+                    return Ok("Email sent successfully");
+                }
+                else
+                {
+                    return StatusCode(500, "Failed to send email");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return StatusCode(500, "Failed to send email");
+                return StatusCode(500, $"Failed to send email: {ex.Message}");
             }
         }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Failed to send email: {ex.Message}");
-        }
-    }
 
+        public override UnauthorizedObjectResult Unauthorized(object value)
+        {
+            return base.Unauthorized(new { Message = "Please login to access this resource." });
+        }
 
         private bool IsValidEmail(string email)
         {
@@ -127,13 +133,13 @@ namespace LoginControllers
                 return false;
             }
         }
-        //method checks if username already exists...
+        //method to check if username already exists...
         private async Task<bool> UserExists(string username)
         {
             return await _context.RegisterModels.AnyAsync(u => u.Username == username);
         }
 
-        //checks if email already exists...
+        //to check if email already exists...
         private async Task<bool> EmailExists(string email)
         {
             return await _context.RegisterModels.AnyAsync(u => u.Email == email);
